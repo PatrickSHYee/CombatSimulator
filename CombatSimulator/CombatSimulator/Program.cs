@@ -24,32 +24,139 @@ namespace CombatSimulator
 		static HeMan player;
 		static Skeletor boss;
 		static int gameState;
+		const int WIDTH = 160;
+		const int HEIGHT = 58;
 
-		// Creates the game
+		/// <summary>
+		/// Initializes a new instance of the <see cref="CombatSimulator.Game"/> class.
+		/// </summary>
 		public Game(){
 			player = new HeMan ();
 			boss = new Skeletor ();
+			gameState = 1;
 			// set window size
-			Console.SetWindowSize (800, 600);
+			Console.SetWindowSize (WIDTH, HEIGHT);
+			Console.CursorVisible = false;
 		}
 
 		// the game loop
 		public void Run()
 		{
+			ConsoleKeyInfo keyInfo;
 			bool quit = true;
+			int user_Input = 0;
 
 			PrintTitle ();
+			PrintStory ();
+			Console.WriteLine ("[Enter] to play the game....");
+			
+			//keyInfo = Console.ReadKey (true);
+
 			while (quit) {
-				quit = player.Quitter ();
+				keyInfo = Console.ReadKey (true);
+				if (keyInfo.Key == ConsoleKey.Enter) {
+					Console.Clear ();
+					PrintNames ();
+					PrintHealth ();
+					PrintLineBreak ();
+					PrintAttacks ();
+					// user input and converts it to int and bool value
+					if (Validator (Console.ReadLine (), out user_Input)) {
+						boss.health -= player.Attack (user_Input);
+					}
+
+					player.health -= boss.Attack ();
+
+					// quit prompt ** note: check for either the player is dead or skeletor
+					if (boss.isDead () || player.isDead ()) {
+						quit = player.Quitter ();
+						if (quit) gameState = 2;
+					}
+					Console.WriteLine ("[Enter] to continue....");
+				}
+				if (gameState == 2) {
+					player = new HeMan ();
+					boss = new Skeletor ();
+					gameState = 1;
+				}
+			}
+
+			// exiting the program and when debugging it will stop.
+			Console.WriteLine ("Skeletor and He-man retreat...\n[Enter] to exit...");
+			keyInfo = Console.ReadKey (true);
+			if (keyInfo.Key == ConsoleKey.Enter) {
+				Console.Write ("Bye... Bye...");
 			}
 		}
 
+		/// <summary>
+		/// Prints the title with a black background and yellow foreground
+		/// </summary>
 		public void PrintTitle(){
-			string title = "     _______ _______ _______ _______ _______  ______\n     |  |  | |     | |          |    |       |     |     \n     |  |  | |_____| |______    |    |______ |_____/\n     |  |  | |     |       |    |    |       |   \\\n _   | _|__| | _   | ______|    |    |______ | ___\\_ _ _______\n |     | |\\    | _____ _     of_ the    ______ |       |\n |     | | \\   |   |    \\    / _______ |     | |______ |______\n |     | |  \\  |   |     \\  /  |______ |_____/       | |\n |_____| |   \\_| __|__    \\/   |______ |    \\_ ______| |______\n";
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.Clear ();
+
+			string title = "#_____________________________________________________________#\n|#####_______#_______#_______#_______#_______##______#########|\n|#####|##|##|#|#####|#|##########|####|#######|#####|#########|\n|#####|##|##|#|_____|#|______####|####|______#|_____/#########|\n|#####|##|##|#|#####|#######|####|####|#######|###\\###########|\n|#_###|#_|__|#|#_###|#______|####|####|______#|#___\\___#______|\n|#|#####|#|\\####|#_____#_##of#the_____#_______##|#######|#####|\n|#|#####|#|#\\###|###|####\\####/#|______#|#####|#|______#|_____|\n|#|#####|#|##\\##|###|#####\\##/##|______#|_____/#######|#|#####|\n|#|_____|#|###\\_|#__|__####\\/###|______#|####\\_#______|#|_____|\n|_____________________________________________________________|\n";
 
 			for(int i = 0; i < title.Length; i++){
-				Console.Write(i);
+				if (title [i] == '#') {
+					Console.ForegroundColor = ConsoleColor.Black;
+				}
+				if (title [i] == '_' || title[i] == '|' || title[i] == '/' || title[i] == '\\') {
+					Console.ForegroundColor = ConsoleColor.Yellow;
+				}
+				if (Char.IsLetter (title [i])) {
+					Console.ForegroundColor = ConsoleColor.Gray;
+				}
+				Console.Write(title[i]);
 			}
+			Console.ForegroundColor = ConsoleColor.White;
+		}
+
+		public void PrintStory(){
+			string text = "You finally found Skeletor and trade off insults back and forth.\n\nSkeletor is a bad ass villain that loves to think of ways to conquer the\n universe.  On his spare time he likes to play Counter-Strike, but you keep his from this.\n\nYou can use your sword, you raise your sword and yell out “I have the power!!!”, or you can eat a bag of chips.\n\nYour sword does most of the damage, but for 70% of the time. When you raise your sword and yell out “I have the power!!!” always hits Skeletor because He-man is a stupid jock that doesn't know anything else to yell out and deals a little\n damage. Or you can eat a bag of chips to heal you.\n\n<Skeletor>\tHe-man, you are a foolish child. Why don't just leave alone?";
+			Console.WriteLine (text);
+		}
+
+		/// <summary>
+		///  displays the names of our players.
+		/// </summary>
+		public void PrintNames(){
+			Console.SetCursorPosition (10, 0);
+			Console.Write (player.name);
+			Console.SetCursorPosition (Console.WindowWidth - boss.name.Length - 10, 0);
+			Console.WriteLine (boss.name);
+		}
+
+		/// <summary>
+		/// Prints the health of the players
+		/// </summary>
+		public void PrintHealth(){
+			Console.SetCursorPosition (5, 1);
+			Console.BackgroundColor = ConsoleColor.DarkRed;
+			for (int hp = 0; hp < player.health; hp+=5) {
+				Console.Write (" ");
+			}
+			Console.SetCursorPosition (Console.WindowWidth - boss.health/5 - 5, 1);
+			for (int hp = 0; hp < boss.health; hp+=5) {
+				Console.Write (" ");
+			}
+			Console.WriteLine ();
+			Console.BackgroundColor = ConsoleColor.Black;
+		}
+
+		/// <summary>
+		/// Prints the line break.
+		/// </summary>
+		public void PrintLineBreak(){
+			for (int line = 0; line < Console.WindowWidth; line++) {
+				Console.Write ("_");
+			}
+		}
+
+		public void PrintAttacks(){
+			Console.SetCursorPosition (0,4);
+			player.PrintAttacks ();
 		}
 
 		/// <summary>
@@ -57,14 +164,13 @@ namespace CombatSimulator
 		/// </summary>
 		/// <param name="userInput">User input.</param>
 		/// <returns>Invalid input</returns>
-		static bool Validator(string userInput)
+		static bool Validator(string userInput, out int output)
 		{
-			int intInput = 0;
-			if (int.TryParse(userInput, out intInput))
+			if (int.TryParse(userInput, out output))
 			{
 				Console.WriteLine ("<Skeletor>\nIs that the only thing you can do right?");
 			}
-			if (intInput < 3) {
+			if (output <= 3 && output != 0) {
 				return true;
 			}
 			Console.WriteLine ("<Skeletor>\nYou, mencing child... he he");
@@ -79,6 +185,7 @@ namespace CombatSimulator
 	{
 		// public variables
 		public int health { get; set; }
+		public string name = "He-Man";
 
 		// private variables
 		private string[] swordAttacks = { "Sword slash", "Uppercut sword slash", "Weak slash" };
@@ -89,22 +196,23 @@ namespace CombatSimulator
 		// when created
 		public HeMan()
 		{
-			Console.WriteLine ("<He-Man>\nI HAVE THE POWER!!!");
 			health = 100;
 		}
 
 		// checks if He-Man is dead or not.
 		public bool isDead()
 		{
-			if (health == 0)
+			if (health <= 0)
 			{
+				Console.WriteLine ("You fail to defeat Skeletor");
 				return true;
 			}
+			Console.WriteLine ("<He-Man>\nDamn, old man come back here and fight me.");
 			return false;
 		}
 
 		public void PrintAttacks(){
-			Console.WriteLine ("(1) Sword (2) Annoy Shout (3) Eat Food");
+			Console.WriteLine ("(1) Sword\n(2) Annoy Shout\n(3) Eat Food");
 		}
 
 		public int Attack(int userInput)
@@ -121,7 +229,7 @@ namespace CombatSimulator
 				if (chances < 70)
 				{
 					if (attackPower >= 35) {
-						Console.WriteLine ("You deal {0} damage a great feat with your {1}. Way to go, He-man...", attackPower, swordAttacks [1]);
+						Console.WriteLine ("You deal {0} damage a great feat with your {1}.\nWay to go, He-man...", attackPower, swordAttacks [1]);
 					} else {
 						Console.WriteLine ("You use your {0} and hit Skeletor with {1} damage.", swordAttacks[0], attackPower);
 					}
@@ -129,7 +237,7 @@ namespace CombatSimulator
 				}else
 				{
 					// you miss and skeletor insults you
-					Console.WriteLine("<Skeletor>\nYou weakling. Go back to your football.\nYou miss with your {0}.", swordAttacks[2]);
+					Console.WriteLine("<Skeletor>\nYou weakling, go back to your football.\nYou miss with your {0}.", swordAttacks[2]);
 				}
 			}
 
@@ -137,13 +245,17 @@ namespace CombatSimulator
 			if (userInput == 2)
 			{
 				attackPower = attackGenerator.Next(1, 15);
-				Console.WriteLine(insultAttack);
+				Console.WriteLine("{0}\nYou deal {1} damage to Skeletor.",insultAttack, attackPower);
 			}
 
 			// healing food
 			if (userInput == 3)
 			{
-				Console.WriteLine("{0} They restore your health {1} points.", healingPower,Healing(attackGenerator.Next(10, 20)));
+				attackPower = Healing (attackGenerator.Next (10, 20));
+				Console.WriteLine("{0}\n They restore your health {1} points.", healingPower, attackPower);
+				if (attackPower < 0) {
+					Console.WriteLine ("You were full.");
+				}
 				attackPower = 0;  // can't attack Skeletor
 			}
 
@@ -157,6 +269,9 @@ namespace CombatSimulator
 		/// <returns>the Healing Points</returns>
 		public int Healing(int addHealth)
 		{
+			if (health + addHealth >= 100) {
+				addHealth = 100 - health - addHealth;
+			}
 			health += addHealth;
 			return addHealth;
 		}
@@ -182,7 +297,7 @@ namespace CombatSimulator
 	{
 		// public variables
 		public int health { get; set; }
-
+		public string name = "Skeletor";
 		// private variables
 		private string[] StaffAttacks = { "Bolts", "Thief of Dreams", "Staff missed fires" };
 		private string insultAttack = "Your furry, flea bitten fool I'll cover my throne with your hide.";
@@ -192,35 +307,59 @@ namespace CombatSimulator
 		// Creates Skeletor with health of 200. He doesn't say anything because he is a bad-ass
 		public Skeletor()
 		{
-			Console.WriteLine("<Skeletor>\n...");
 			health = 200;
 		}
 
 		// checks if Skeletor has fallen or not.
 		public bool isDead()
 		{
-			if (health == 0)
+			if (health <= 0)
 			{
 				Console.WriteLine ("<Skeletor>\nYou, mencing child...I HATE YOU HE-MAN!!");
 				return true;
 			}
-			Console.WriteLine ("You haven't done me in, yet you boob");
+			Console.WriteLine ("<Skeletor>\nYou haven't done me in, yet you boob");
 			return false;
 		}
 
-		// don't why
-		public void PrintAttacks(){
-			Console.WriteLine ("(1) Havoc Staff (2) Insult He-Man (3) Healing Power");
+
+		public void PrintAttack(int input){
+			switch (input){
+			case 1:
+				{
+					Console.WriteLine ("Skeletor uses his staff attack.");
+					break;
+				}
+			case 2:
+				{
+					Console.WriteLine ("Skeletor insults you.");
+					break;
+				}
+			case 3:
+				{
+					Console.WriteLine ("Skeletor uses his machines to heal.");
+					break;
+				}
+
+			}
 		}
 
 		/// <summary>
 		/// Attack the specified CompInput where the is evalutes attackPower or healing power
 		/// </summary>
 		/// <param name="userInput">Computer's input.</param>
-		public int Attack(int CompInput)
+		public int Attack()
 		{
-			int attackPower = 0;
+			int CompInput = attackGenerator.Next(1,3);
 			int chances = 0;
+			int attackPower = 0;
+
+			if (health < 15) {
+				CompInput = 3;
+			}
+
+			//PrintAttack (CompInput);
+			Console.WriteLine ();
 
 			if (CompInput == 1)
 			{
@@ -241,7 +380,7 @@ namespace CombatSimulator
 				} else
 				{
 					// you miss and skeletor insults you
-					Console.WriteLine("Skeletor, you need something to eat. You are just bones.\nYou miss with your {0}.", StaffAttacks[2]);
+					Console.WriteLine("<He-Man>\nSkeletor, you need something to eat. You are just bones.\nSkeletor miss with his {0}.", StaffAttacks[2]);
 				}
 			}
 
@@ -249,13 +388,18 @@ namespace CombatSimulator
 			if (CompInput == 2)
 			{
 				attackPower = attackGenerator.Next(1, 10);
-				Console.WriteLine(insultAttack);
+				Console.WriteLine("<Skeletor>\n{0}", insultAttack);
+				Console.WriteLine ("Skeletor dealt {0} damage to you.", attackPower);
 			}
 
 			// healing powers
 			if (CompInput == 3)
 			{
-				Console.WriteLine("{0} They restore your health {1} points.", healingPower,Healing(attackGenerator.Next(10, 20)));
+				attackPower = Healing(attackGenerator.Next(10, 20));
+				Console.WriteLine("{0} That restore his health {1} points.", healingPower, attackPower);
+				if (attackPower < 0) {
+					Console.WriteLine ("Skeletor was full.");
+				}
 				attackPower = 0;  // Don't damage player
 			}
 
@@ -269,6 +413,9 @@ namespace CombatSimulator
 		/// <returns>returns addHealth</returns>
 		public int Healing(int addHealth)
 		{
+			if (health + addHealth >= 200) {
+				addHealth = 200 - health - addHealth;
+			}
 			health += addHealth;
 			return addHealth;
 		}
