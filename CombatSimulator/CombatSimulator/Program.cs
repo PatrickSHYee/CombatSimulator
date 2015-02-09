@@ -24,7 +24,7 @@ namespace CombatSimulator
 		static HeMan player;
 		static Skeletor boss;
 		static int gameState;
-		const int WIDTH = 160;
+		const int WIDTH = 80;
 		const int HEIGHT = 58;
 
 		/// <summary>
@@ -70,9 +70,11 @@ namespace CombatSimulator
 					// quit prompt ** note: check for either the player is dead or skeletor
 					if (boss.isDead () || player.isDead ()) {
 						quit = player.Quitter ();
-						if (quit) gameState = 2;
+						if (quit)
+							gameState = 2;
+					} else {
+						Console.WriteLine ("[Enter] to continue....");
 					}
-					Console.WriteLine ("[Enter] to continue....");
 				}
 				if (gameState == 2) {
 					player = new HeMan ();
@@ -238,6 +240,7 @@ namespace CombatSimulator
 				{
 					// you miss and skeletor insults you
 					Console.WriteLine("<Skeletor>\nYou weakling, go back to your football.\nYou miss with your {0}.", swordAttacks[2]);
+					attackPower = 0;
 				}
 			}
 
@@ -381,6 +384,7 @@ namespace CombatSimulator
 				{
 					// you miss and skeletor insults you
 					Console.WriteLine("<He-Man>\nSkeletor, you need something to eat. You are just bones.\nSkeletor miss with his {0}.", StaffAttacks[2]);
+					attackPower = 0;
 				}
 			}
 
